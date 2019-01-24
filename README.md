@@ -78,11 +78,11 @@ For the deploy, we need to have the kubeconfig in a variable "kube_config" in Gi
 
 ### Toolsets:
 
-Container Management: Kubernetes (Amazon Elastic Container Service for Kubernetes)
-Deployable Artifact: Docker Image created form provided Dockerfile.
-Deploy Method: Kubernetes yaml files / HELM
-CI/CD: GitlabC
-Scripting Language: Bash, Python.
+* Container Management: Kubernetes (Amazon Elastic Container Service for Kubernetes)
+* Deployable Artifact: Docker Image created form provided Dockerfile.
+* Deploy Method: Kubernetes yaml files / HELM
+* CI/CD: GitlabC
+* Scripting Language: Bash, Python.
 
 
 # Final notes.  
