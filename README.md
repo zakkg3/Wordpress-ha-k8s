@@ -72,7 +72,7 @@ On every push, GilabCi will use a shared runner to build and push the image from
 
 ### 5. Congigure CD/CI
 
-CD/CI is on GitlabCI : https://gitlab.com/zakkg3/k8s-wordpress-ha 
+CD/CI is on GitlabCI : https://gitlab.com/zakkg3/k8s-wordpress-ha
 For the deploy, we need to have the kubeconfig in a variable "kube_config" in GitlabCI. The deploy stage uses this to execute kubectl and helm commands.
 
 
@@ -84,9 +84,6 @@ Deploy Method: Kubernetes yaml files / HELM
 CI/CD: GitlabC
 Scripting Language: Bash, Python.
 
-# Minikube version (depreciated and not supported)
-
-There is a bash cli "minikube-wpk8s-bash" for create the minikube cluster and install the helm chart, there is also a values.yaml file in the chart for this Minikube version (exposing as NodePort).
 
 # Final notes.  
 
