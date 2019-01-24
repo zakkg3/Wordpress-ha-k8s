@@ -72,24 +72,9 @@ On every push, GilabCi will use a shared runner to build and push the image from
 
 ### 5. Congigure CD/CI
 
+CD/CI is on GitlabCI : https://gitlab.com/zakkg3/k8s-wordpress-ha 
 For the deploy, we need to have the kubeconfig in a variable "kube_config" in GitlabCI. The deploy stage uses this to execute kubectl and helm commands.
 
-
-# Challange
-
-### Deliverables
-- [x] Dockerfile  (one or many depending on complexity of app). Containing the build of the deployable artifact (Your PHP application inside a docker image).
-- [x] Kubernetes manifests / HELM charts to deploy this app inside kubernetes.
-- [x] GitlabCI pipeline which streamlines the process of build and deploy (Nice to have).
-
-
-### Requirements
-- [x] All resources must be managed in code.
-- [x] Create HA/Redundancy where applicable.
-- [x] PHP/Py thon/Ruby/Perl application must be deployed from code, no containers from Docker HUB are allowed.
-- [x] Docker HUB containers are allowed for “infrastructure” pieces like Databases Cache  Proxies
-- [x] Keep the solution simple but apply best practices where you see a fit for it.
-- [x] Analysis (ANALYSIS.MD) on how you would further scale and improve this deployment.
 
 ### Toolsets:
 
