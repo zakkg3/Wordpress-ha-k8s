@@ -1,0 +1,4 @@
+bucket  = "k8s-tf-state-nico-dev"
+key     = "terraform-state/k8s-wp"
+region  = "eu-west-1"
+profile = "test-dev"

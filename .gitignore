@@ -1,0 +1,5 @@
+
+*NOCOMMIT*
+.terraform*
+infra-terraform/bucket/terraform.tfstate.backup
+infra-terraform/resources/kubecfg.yaml

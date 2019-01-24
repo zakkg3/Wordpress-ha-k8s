@@ -1,0 +1,118 @@
+#!/usr/bin/env python
+import argparse
+import sys
+import os
+import subprocess
+
+def check_helm():
+    ## HELM
+    import distutils.spawn
+    helm =distutils.spawn.find_executable("helm")
+    if helm:
+        print "HELM, OK -- found in ",helm
+    else:
+        print "helm not found"
+        sys.exit(1)
+
+    ## KUBECTL
+    # kubectl = distutils.spawn.find_executable("kubectl")
+    # # kubectl = which("kubect")
+    # if kubectl:
+    #     print "Kubectl OK -- found in ",kubectl
+    # else:
+    #     print >> sys.stderr,"Kubectl not found"
+    #     sys.exit(1)
+
+def runcommand (cmd, *argv):
+    try:
+        subprocess.check_call([cmd] + list(argv))
+    except subprocess.CalledProcessError:
+        print "Error in the command"
+        sys.exit(1) # handle errors in the called executable
+    except OSError:
+        print >> sys.stderr,"Command ",cmd," not found. aborting" # executable not found
+        sys.exit(1)
+
+def helm_init():
+    print "==== Ruinning Helm on RBAC cluster ===="
+    check_helm()
+    runcommand("helm", "init", "--service-account","tiller")
+    runcommand("helm", "update")
+
+def config_kbctl():
+    runcommand ('export','KUBECONFIG=./infra-terraform/resources/kubecfg.yaml')
+    runcommand ('kubectl','apply','-f',"infra-terraform/resources/config_map_aws_auth.yaml") # Allow nodes to jhoin the cluster
+    runcommand ('kubectl','apply','-f',"infra-terraform/resources/eks-admin-service-account.yaml") # Create service account
+    runcommand ('kubectl','apply','-f',"infra-terraform/resources/eks-admin-cluster-role-binding.yaml") # Role Binding for adminaccount
+
+
+
+def install ():
+    print "===== Runing chart ====="
+    #helm install --name wp2 -f wp-chart/values-challange-minikube.yaml ./wp-chart
+    #runcommand ('kubectl', 'apply','-f','k8s-yaml/helm-tiller/rbac-config.yaml')
+    runcommand ('helm','install','--name','wp','--namespace','wp-nico','-f','custom-chart/values.yaml','./custom-chart')
+
+
+
+def apply ():
+    print "==== Applying terraform ===="
+    wd = os.getcwd()
+    os.chdir("./infra-terraform/bucket")
+    print "==== Creating bucket ===="
+    runcommand ('terraform','init')
+    runcommand ('terraform','apply','-var-file','../dev.tfvars')
+    os.chdir("../")
+    print "==== Creating infrastructure ===="
+    runcommand ('terraform','init','-backend-config','state_config')
+    runcommand ('terraform','apply','-var-file','dev.tfvars')
+    os.chdir(wd)
+
+def upgrade ():
+    print "==== Ugrading Challange ====="
+    runcommand ('helm','upgrade','wp','./custom-chart')
+
+def stop ():
+    print "Stoping"
+    runcommand ('helm','delete','--purge','wp')
+    #print >> sys.stderr,"Stop not implemented"
+
+if __name__ == '__main__':
+    # Initialize the parser
+    parser = argparse.ArgumentParser(description="Wintercricle CLI",prog='wcli')
+
+    parser.add_argument('-a', '--apply',  help="Apply the terraform infrastructure in specified path and config kubectl",action='store_true')
+    parser.add_argument('-i', '--install',  help="Install chart in specified path.",action='store_true')
+    parser.add_argument('-k', '--kubeconfig',   help="Configure Kubeconfig",action='store_true')
+    parser.add_argument('-hi', '--helminit',   help="Initilize HELM",action='store_true')
+    parser.add_argument('-u', '--upgrade',   help="Upgrade HELM deployment",action='store_true')
+    parser.add_argument('-s', '--stop',   help="Stop and purge HELM",action='store_true')
+
+    args = parser.parse_args()
+    #args.func(args)
+
+    if len(sys.argv)==1:
+        parser.print_help()
+        sys.exit(1)
+
+    if (args.stop):
+        if len(sys.argv)>2:
+            print "error: argument -s/--stop: not allowed with any other arguments"
+            parser.print_help()
+            sys.exit(1)
+        stop()
+
+    if (args.kubeconfig):
+        config_kbctl()
+
+    if (args.apply):
+        apply()
+
+    if (args.helminit):
+        helm_init()
+
+    if (args.install):
+        install()
+
+    if (args.upgrade):
+        upgrade()

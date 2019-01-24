@@ -1,0 +1,58 @@
+ image: docker:stable
+
+ variables:
+   DOCKER_HOST: tcp://docker:2375/
+   DOCKER_DRIVER: overlay2
+   KUBECONFIG: /etc/deploy/config
+
+ services:
+   - docker:dind
+
+ build_curl:
+   stage: build
+   script:
+     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com
+     - docker build -t registry.gitlab.com/zakkg3/k8s-wordpress-ha/curl -f Wordpress/Dockerfile Wordpress/
+     - docker push registry.gitlab.com/zakkg3/k8s-wordpress-ha/curl
+ test:
+    stage: test
+    #image: registry.gitlab.com/zakkg3/k8s-wordpress-ha/master
+    script: #TO-DO add here tests
+     - docker run registry.gitlab.com/zakkg3/k8s-wordpress-ha/master /bin/bash -c "echo some-test" #testing porpuses
+ security:
+    image: docker:stable
+    allow_failure: true #to-do install /security
+    services:
+      - docker:stable-dind
+    script:
+      - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+      - docker run
+          --env SAST_CONFIDENCE_LEVEL="${SAST_CONFIDENCE_LEVEL:-3}"
+          --volume "$PWD:/code"
+          --volume /var/run/docker.sock:/var/run/docker.sock
+          "registry.gitlab.com/gitlab-org/security-products/sast:$SP_VERSION" /app/bin/run /code
+    # artifacts:
+    #   reports:
+    #     sast: gl-sast-report.json
+
+ deploy:
+    stage: deploy
+    allow_failure: true #to-do - Finish this
+    image: lwolf/helm-kubectl-docker #an image with kubctl and helm
+    script:
+      - mkdir -p /etc/deploy
+      - echo ${kube_config} | base64 -d > ${KUBECONFIG}
+      - helm init --client-only
+      - apk update && apk add curl
+      - curl -o aws-iam-authenticator https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/linux/amd64/aws-iam-authenticator
+      - chmod +x ./aws-iam-authenticator
+      - mv aws-iam-authenticator /usr/bin/
+      #testing
+      - kubectl get all
+      - helm list
+      # deploy_upgrade
+      #- helm upgrade wp -f custom-chart/values.yaml ./custom-chart  # sometimes, this is causing the db to not accept the new rolled conection.
+      # re_deploy
+      # - helm delete --purge wp # workarround the upgrade issue (not por production, involves downtime!)
+      # - helm install --name wp --namespace wp-nico -f wp-chart/values-challange.yaml ./wp-chart
+      # to-do helm repo & helm repo update
